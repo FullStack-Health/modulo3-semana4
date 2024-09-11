@@ -1,8 +1,12 @@
 package br.com.fullstack.postit.services;
 
+import br.com.fullstack.postit.dtos.ReminderRequest;
+import br.com.fullstack.postit.dtos.ReminderResponse;
 import br.com.fullstack.postit.entities.Reminder;
+import br.com.fullstack.postit.exceptions.notfound.ReminderNotFound;
 import br.com.fullstack.postit.repositories.ReminderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,23 +18,24 @@ public class ReminderServiceImpl implements ReminderService {
     private final ReminderRepository repository;
 
     @Override
-    public Reminder create(Reminder reminder) {
-        reminder.setId(null);
-        return repository.save(reminder);
+    public ReminderResponse create(ReminderRequest request) {
+        Reminder reminder = new Reminder(request);
+        repository.save(reminder);
+        return new ReminderResponse(reminder);
     }
 
     @Override
-    public Page<Reminder> findAll(Pageable pageable) {
+    public Page<ReminderResponse> findAll(Pageable pageable) {
         return repository.findAll(pageable);
     }
 
     @Override
-    public Reminder findById(Long id) {
-        return repository.findById(id).orElseThrow(() -> new RuntimeException("Reminder not found with id: " + id));
+    public ReminderResponse findById(Long id) {
+        return repository.findById(id).orElseThrow(() -> new ReminderNotFound(id));
     }
 
     @Override
-    public Reminder update(Long id, Reminder reminder) {
+    public ReminderResponse update(Long id, ReminderRequest reminder) {
         findById(id);
         reminder.setId(id);
         return repository.save(reminder);

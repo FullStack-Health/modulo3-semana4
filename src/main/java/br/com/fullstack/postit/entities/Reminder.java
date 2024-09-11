@@ -1,14 +1,18 @@
 package br.com.fullstack.postit.entities;
 
+import br.com.fullstack.postit.dtos.ReminderRequest;
 import br.com.fullstack.postit.enums.Priority;
 import br.com.fullstack.postit.enums.Status;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDateTime;
 
 @Data
 @Entity
+@NoArgsConstructor
 @Table(name = "reminders")
 public class Reminder {
 
@@ -30,6 +34,9 @@ public class Reminder {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private Status status;
+    private Status status = Status.PENDING;
 
+    public Reminder(ReminderRequest request) {
+        BeanUtils.copyProperties(request, this);
+    }
 }
