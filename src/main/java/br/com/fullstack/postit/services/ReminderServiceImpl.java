@@ -1,15 +1,18 @@
 package br.com.fullstack.postit.services;
 
+import br.com.fullstack.postit.dtos.ReminderFilter;
 import br.com.fullstack.postit.dtos.ReminderRequest;
 import br.com.fullstack.postit.dtos.ReminderResponse;
 import br.com.fullstack.postit.entities.Reminder;
 import br.com.fullstack.postit.exceptions.notfound.ReminderNotFound;
 import br.com.fullstack.postit.repositories.ReminderRepository;
+import br.com.fullstack.postit.utils.DateUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -32,12 +35,28 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
-    public Page<ReminderResponse> findAll(Pageable pageable) {
+    public Page<ReminderResponse> findAll(ReminderFilter filter, Pageable pageable) {
         log.info("Finding all reminders");
-        Page<ReminderResponse> response = repository.findAll(pageable).map(ReminderResponse::new);
 
-        log.info("{} Reminders found", response.getNumberOfElements());
-        return response;
+        Page<Reminder> reminders;
+        if (filter != null && filter.getDateTimeInitial() != null) {
+            if (filter.getDateTimeFinal() == null)
+                filter.setDateTimeFinal(
+                        DateUtility.lastHourOfTheDay(filter.getDateTimeInitial())
+                );
+
+            reminders = repository.findAllByRemindAtBetweenOrderByRemindAt(
+                    filter.getDateTimeInitial(),
+                    filter.getDateTimeFinal(),
+                    pageable
+            );
+        } else {
+            pageable.getSortOr(Sort.by("remindAt").ascending());
+            reminders = repository.findAll(pageable);
+        }
+
+        log.info("{} Reminders found", reminders.getNumberOfElements());
+        return reminders.map(ReminderResponse::new);
     }
 
     @Override

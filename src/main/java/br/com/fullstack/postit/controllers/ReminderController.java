@@ -1,5 +1,6 @@
 package br.com.fullstack.postit.controllers;
 
+import br.com.fullstack.postit.dtos.ReminderFilter;
 import br.com.fullstack.postit.dtos.ReminderRequest;
 import br.com.fullstack.postit.dtos.ReminderResponse;
 import br.com.fullstack.postit.services.ReminderService;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -21,9 +24,15 @@ public class ReminderController {
     private final ReminderService service;
 
     @GetMapping
-    public Page<ReminderResponse> get(Pageable pageable) {
+    public Page<ReminderResponse> get(
+            ReminderFilter filter,
+            Pageable pageable
+    ) {
         log.info("GET /reminders -> Begin");
-        Page<ReminderResponse> response = service.findAll(pageable);
+        Page<ReminderResponse> response = service.findAll(
+                filter,
+                pageable
+        );
 
         log.info("GET /reminders -> End");
         return response;
