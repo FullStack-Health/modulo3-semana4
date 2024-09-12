@@ -3,6 +3,7 @@ package br.com.fullstack.postit.controllers;
 import br.com.fullstack.postit.dtos.ReminderRequest;
 import br.com.fullstack.postit.dtos.ReminderResponse;
 import br.com.fullstack.postit.services.ReminderService;
+import br.com.fullstack.postit.utils.JsonUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("reminders")
 public class ReminderController {
+//    private final Logger log = LoggerFactory.getLogger(ReminderController.class);
 
     private final ReminderService service;
 
@@ -52,7 +54,14 @@ public class ReminderController {
             @RequestBody ReminderRequest reminder
     ) {
         log.info("PUT /reminders/{} -> Begin", id);
+
+        if (log.isDebugEnabled())
+            log.debug("PUT /reminders/{} -> RequestBody: {}", id, JsonUtility.toJson(reminder));
+
         ReminderResponse response = service.update(id, reminder);
+
+        if (log.isDebugEnabled())
+            log.debug("PUT /reminders/{} -> ResponseBody: {}", id, JsonUtility.toJson(response));
 
         log.info("PUT /reminders/{} -> End", id);
         return response;
