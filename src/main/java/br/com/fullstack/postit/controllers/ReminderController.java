@@ -3,6 +3,7 @@ package br.com.fullstack.postit.controllers;
 import br.com.fullstack.postit.dtos.ReminderFilter;
 import br.com.fullstack.postit.dtos.ReminderRequest;
 import br.com.fullstack.postit.dtos.ReminderResponse;
+import br.com.fullstack.postit.enums.Status;
 import br.com.fullstack.postit.services.ReminderService;
 import br.com.fullstack.postit.utils.JsonUtility;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,6 +49,32 @@ public class ReminderController {
         );
 
         log.info("GET /reminders -> End");
+        return response;
+    }
+
+    @GetMapping("current")
+    @Operation(description = "Find all current reminders", summary = "Find current reminders")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success") })
+    public Page<ReminderResponse> getCurrent(
+            @ParameterObject() @PageableDefault() Pageable pageable
+    ) {
+        log.info("GET /reminders/current -> Begin");
+        Page<ReminderResponse> response = service.findAllCurrent(pageable);
+
+        log.info("GET /reminders/current -> End");
+        return response;
+    }
+
+    @GetMapping("next")
+    @Operation(description = "Find all next reminders", summary = "Find next reminders")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success") })
+    public Page<ReminderResponse> getNext(
+            @ParameterObject() @PageableDefault() Pageable pageable
+    ) {
+        log.info("GET /reminders/next -> Begin");
+        Page<ReminderResponse> response = service.findAllNext(pageable);
+
+        log.info("GET /reminders/next -> End");
         return response;
     }
 
@@ -110,5 +137,49 @@ public class ReminderController {
         log.info("DELETE /reminders/{} -> Begin", id);
         service.delete(id);
         log.info("DELETE /reminders/{} -> End", id);
+    }
+
+    @PatchMapping("{id}/pending")
+    @Operation(summary = "Change reminder status to PENDING")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success") })
+    public ReminderResponse patchPending(
+            @Parameter(example = "1", description = "Reminder id")
+            @PathVariable Long id
+    ) {
+        log.info("PATCH /reminders/{}/pending -> Begin", id);
+        ReminderResponse response = service.pending(id);
+
+        log.info("PATCH /reminders/{}/pending -> End", id);
+        return response;
+    }
+
+    @PatchMapping("{id}/done")
+    @Operation(summary = "Change reminder status to DONE")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success") })
+    public ReminderResponse patchDone(
+            @Parameter(example = "1", description = "Reminder id")
+            @PathVariable Long id
+    ) {
+        log.info("PATCH /reminders/{}/done -> Begin", id);
+        ReminderResponse response = service.done(id);
+
+        log.info("PATCH /reminders/{}/done -> End", id);
+        return response;
+    }
+
+    @PatchMapping("{id}/status/{status}")
+    @Operation(summary = "Change reminder status")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success") })
+    public ReminderResponse patchChangeStatus(
+            @Parameter(example = "1", description = "Reminder id")
+            @PathVariable Long id,
+            @Parameter(example = "PENDING", description = "Status")
+            @PathVariable Status status
+    ) {
+        log.info("PATCH /reminders/{}/status/{} -> Begin", id, status);
+        ReminderResponse response = service.changeStatus(id, status);
+
+        log.info("PATCH /reminders/{}/status/{} -> End", id, status);
+        return response;
     }
 }

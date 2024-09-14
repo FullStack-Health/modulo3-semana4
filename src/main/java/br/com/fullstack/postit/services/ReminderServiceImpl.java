@@ -4,6 +4,7 @@ import br.com.fullstack.postit.dtos.ReminderFilter;
 import br.com.fullstack.postit.dtos.ReminderRequest;
 import br.com.fullstack.postit.dtos.ReminderResponse;
 import br.com.fullstack.postit.entities.Reminder;
+import br.com.fullstack.postit.enums.Status;
 import br.com.fullstack.postit.exceptions.notfound.ReminderNotFound;
 import br.com.fullstack.postit.repositories.ReminderRepository;
 import br.com.fullstack.postit.utils.DateUtility;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -60,6 +63,32 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
+    public Page<ReminderResponse> findAllCurrent(Pageable pageable) {
+        log.info("Finding current reminders");
+
+        LocalDateTime dInitial = LocalDateTime.now();
+        LocalDateTime dFinal = DateUtility.lastHourOfTheDay(dInitial);
+        Page<Reminder> reminders = repository.findAllByRemindAtBetweenOrderByRemindAt(
+                dInitial,
+                dFinal,
+                pageable
+        );
+
+        log.info("{} Current reminders found", reminders.getNumberOfElements());
+        return reminders.map(ReminderResponse::new);
+    }
+
+    @Override
+    public Page<ReminderResponse> findAllNext(Pageable pageable) {
+        log.info("Finding next reminders");
+
+        Page<Reminder> reminders = repository.findAllByRemindAtAfterNowOrderByRemindAt(pageable);
+
+        log.info("{} Next reminders found", reminders.getNumberOfElements());
+        return reminders.map(ReminderResponse::new);
+    }
+
+    @Override
     public ReminderResponse findById(Long id) {
         log.info("Finding reminder with id {}", id);
         Reminder reminder = findEntityById(id);
@@ -86,6 +115,27 @@ public class ReminderServiceImpl implements ReminderService {
 
         repository.deleteById(id);
         log.info("Reminder deleted with id {}", id);
+    }
+
+    @Override
+    public ReminderResponse pending(Long id) {
+        return changeStatus(id, Status.PENDING);
+    }
+
+    @Override
+    public ReminderResponse done(Long id) {
+        return changeStatus(id, Status.DONE);
+    }
+
+    @Override
+    public ReminderResponse changeStatus(Long id, Status status) {
+        log.info("Change reminder status with id {} to {}", id, status);
+        Reminder reminder = findEntityById(id);
+        reminder.setStatus(status);
+
+        ReminderResponse response = save(reminder);
+        log.info("Reminder status with id {} changed to {}", id, status);
+        return response;
     }
 
     private Reminder findEntityById(Long id) {
